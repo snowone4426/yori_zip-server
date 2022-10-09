@@ -13,12 +13,12 @@ public class RecipeDAO extends DBConnPool {
 		super();
 	}
 	
-	public List<RecipeObj> getThemeRecipeList (String search) {
+	public List<RecipeObj> getThemeRecipeList (Integer search_id) {
 		List<RecipeObj> theme_list = new ArrayList<RecipeObj>();
 		String sql = "SELECT ROWNUM as num, recipe_id, title, subtitle, thumbnail FROM ("
 				+ "SELECT count(*) as popularity , a.recipe_id, a.title, a.subtitle, a.thumbnail "
 				+ "FROM (SELECT r.recipe_id, r.title, r.subtitle, r.thumbnail FROM recipe "
-				+ "INNER JOIN recipetag t ON r.recipe_id=t.recipe_id WHERE t.tag='" + search + "') a "
+				+ "INNER JOIN recipetag t ON r.recipe_id=t.recipe_id WHERE t.tag_id='" + search_id + "') a "
 				+ "INNER JOIN bookmark b ON a.recipe_id = b.recipe_id "
 				+ "GROUP BY a.recipe_id, a.title, a.subtitle, a.thumbnail "
 				+ "ORDER BY popularity DESC "
@@ -51,10 +51,11 @@ public class RecipeDAO extends DBConnPool {
 	public List<RecipeObj> getHotRecipeList () {
 	  List<RecipeObj> hot_list = new ArrayList<RecipeObj>();
 	  String sql = "SELECT ROWNUM, recipe_id, title, subtitle, thumbnail FROM ("
-	      + "SELECT r.recipe_id, r.title, r.subtitle, r.thumbnail FROM recipe "
-	      + "INNER JOIN bookmark b ON r.recipe_id = n.recipe_id "
+	      + "SELECT r.recipe_id, r.title, r.subtitle, r.thumbnail FROM recipe r "
+	      + "INNER JOIN bookmark b ON r.recipe_id = b.recipe_id "
 	      + "GROUP BY r.recipe_id, r.title, r.subtitle, r.thumbnail ORDER BY count(*) DESC) "
 	      + "WHERE ROWNUM < 9";
+	  
 	  try {
         stmt = con.createStatement();
         rs = stmt.executeQuery(sql);
@@ -85,8 +86,10 @@ public class RecipeDAO extends DBConnPool {
 	      + "SELECT r.recipe_id, r.title, r.subtitle, r.thumbnail FROM recipe "
 	      + "INNER JOIN recipecategory rc ON r.recipe_id = rc.recipe_id "
 	      + "INNER JOIN category c ON c.category_id = rc.category_id "
-	      + "WHERE c.name = '" + category + "' AND rc.sub_category = '" + sub_category + "' "
-	      + "ORDER BY r.created_at) WHERE ROWNUM BETWEEN 'offset * limit' AND '(offset + 1) * limit';";
+	      + "WHERE c.name = '" + category + "' AND rc.sub_category = '" + "" + "' "
+	      + "ORDER BY r.created_at) WHERE ROWNUM BETWEEN " + offset*limit + " AND " + (offset + 1)*limit;
+	  
+	  
 	  
 	  return recipe_list;
 	}
