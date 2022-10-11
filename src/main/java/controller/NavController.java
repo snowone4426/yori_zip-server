@@ -10,13 +10,13 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import dao.BannerObj;
 import dao.RecipeDAO;
 import dao.RecipeObj;
 
@@ -37,8 +37,11 @@ public class NavController extends HttpServlet {
 	      case "category" : 
 	        getCategory(request,response);
 	        break;
-	      case "viewrecipe" : 
+	      case "setviewrecipe" : 
 	        setViewRecipe(request,response);
+	        break;
+	      case "getviewrecipe" :
+	        getViewRecipe(request,response);
 	        break;
 	      default : 
 	        PrintWriter out = response.getWriter();
@@ -70,15 +73,21 @@ public class NavController extends HttpServlet {
 	  out.print(json_obj.toString());
 	}
 	
-	private void setViewRecipe (HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	@SuppressWarnings("unchecked")
+  private void setViewRecipe (HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 	  response.setContentType("application/json");
       response.setCharacterEncoding("utf-8");
       PrintWriter out = response.getWriter();
       HttpSession session = request.getSession();
-      @SuppressWarnings("unchecked")
-      List<RecipeObj> recent_view = (ArrayList<RecipeObj>) session.getAttribute("recent_view");
-      RecipeObj recipe = new RecipeObj();
+      List<RecipeObj> recent_view = null;
       
+      if (session.getAttribute("recent_view") != null) {
+        recent_view = (ArrayList<RecipeObj>) session.getAttribute("recent_view");
+      } else {
+        recent_view = new ArrayList<>();
+      }
+      
+      RecipeObj recipe = new RecipeObj();
       recipe.setRecipe_id(request.getParameter("recipe_id"));
       recipe.setThumbnail(request.getParameter("thumbnail"));
       recipe.setTitle(request.getParameter("title"));
@@ -90,6 +99,40 @@ public class NavController extends HttpServlet {
         subList.add(recipe);
         recent_view = subList;
       }
+      
+      session.setAttribute("recent_view", recent_view);
+      
+      out.print(true);
 	}
-
+	
+	@SuppressWarnings("unchecked")
+  private void getViewRecipe (HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+      response.setContentType("application/json");
+      response.setCharacterEncoding("utf-8");
+      PrintWriter out = response.getWriter();
+      HttpSession session = request.getSession();
+      List<RecipeObj> recent_view = null;
+      JSONArray json_array = new JSONArray();
+      
+      if (session.getAttribute("recent_view") != null) {
+        recent_view = (ArrayList<RecipeObj>) session.getAttribute("recent_view");
+        
+        for (RecipeObj recipe : recent_view) {
+          JSONObject json_obj = new JSONObject();
+          try {
+            json_obj.put("recipe_id", recipe.getRecipe_id());
+            json_obj.put("thumbnail", recipe.getThumbnail());
+            json_obj.put("title", recipe.getTitle());
+          } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
+          json_array.put(json_obj);
+        }
+      }
+      
+      out.print(json_array.toString());
+	}
+	
+	
 }
