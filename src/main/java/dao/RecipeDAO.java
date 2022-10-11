@@ -52,11 +52,15 @@ public class RecipeDAO extends DBConnPool {
 	// 북마크가 많은 상위 8개를 뽑아서 보여줌.
 	public List<RecipeObj> getHotRecipeList () {
 	  List<RecipeObj> hot_list = new ArrayList<RecipeObj>();
-	  String sql = "SELECT ROWNUM, recipe_id, title, subtitle, thumbnail FROM ("
-	      + "SELECT r.recipe_id, r.title, r.subtitle, r.thumbnail FROM recipe r "
-	      + "INNER JOIN bookmark b ON r.recipe_id = b.recipe_id "
-	      + "GROUP BY r.recipe_id, r.title, r.subtitle, r.thumbnail ORDER BY count(*) DESC) "
-	      + "WHERE ROWNUM < 9";
+	  String sql = "SELECT ROWNUM, a.* FROM (SELECT r.recipe_id, r.thumbnail, r.title, r.subtitle, r.difficulty, r.time, r.created_at, r.updated_at, r.state, "
+          + "ROUND(AVG(s.score),1) AS star_score, count(*) AS popular FROM recipe "
+          + "INNER JOIN star s ON r.recipe_id = s.recipe_id "
+          + "INNER JOIN bookmark b ON r.recipe_id = b.recipe_id "
+          + "GROUP BY r.recipe_id, r.thumbnail, r.title, r.subtitle, r.difficulty, r.time, r.created_at, r.updated_at, r.state "
+          + "ORDER BY popular DESC) a "
+          + "WHERE ROWNUM < 9";
+	  
+	  System.out.println(sql);
 	  
 	  try {
         stmt = con.createStatement();
@@ -66,9 +70,17 @@ public class RecipeDAO extends DBConnPool {
           RecipeObj recipe = new RecipeObj();
           
           recipe.setRecipe_id(rs.getString("recipe_id"));
+          recipe.setThumbnail(rs.getString("thumbnail"));
           recipe.setTitle(rs.getString("title"));
           recipe.setSubtitle(rs.getString("subtitle"));
-          recipe.setThumbnail(rs.getString("thumbnail"));
+          recipe.setLevel(rs.getString("difficulty"));
+          recipe.setTime(rs.getString("time"));
+          recipe.setCreate_at(rs.getDate("created_at"));
+          recipe.setUpdate_at(rs.getDate("updated_at"));
+          recipe.setState(rs.getString("state"));
+          recipe.setStar_score(rs.getString("star_score"));
+          
+          
           
           hot_list.add(recipe);
         }
@@ -442,8 +454,8 @@ public class RecipeDAO extends DBConnPool {
 	  return result;
 	}
 	
-	public Map<String,String> getCategory () {
-	  Map<String,String> category = new HashMap<String,String>();
+	public Map<String,List<String>> getCategory () {
+	  Map<String,List<String>> category = new HashMap<String,List<String>>();
       List<String> main_category = new ArrayList<String>();
       String category_sql = "SELECT c.category_id, c.name FROM category";
       
@@ -456,15 +468,18 @@ public class RecipeDAO extends DBConnPool {
         }
         
         for (String name : main_category) {
+          List<String> sub_category = new ArrayList<>();
           String sub_category_sql = "SELECT rc.category_id, rc.recipe_id, rc.sub_category, c.name FROM recipecategory rc "
               + "INNER JOIN category c ON rc.category_id = c.category_id "
               + "WHERE  c.name = '" + name + "'";
           
           rs = stmt.executeQuery(sub_category_sql);
           
-          if (rs.next()) {
-            category.put(name, rs.getString("sub_category"));
+          while (rs.next()) {
+            sub_category.add(rs.getString("sub_category"));
           }
+          
+          category.put(name, sub_category);
           
         }
         

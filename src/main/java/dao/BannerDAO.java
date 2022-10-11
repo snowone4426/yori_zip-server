@@ -8,7 +8,7 @@ import util.DBConnPool;
 public class BannerDAO extends DBConnPool {
   public List<BannerObj> getBannerList () {
     List<BannerObj> banner_list = new ArrayList<>();
-    String sql = "SELECT * FROM banner WHERE start_date < sysdate AND end_date > sysdate";
+    String sql = "SELECT * FROM banner WHERE start_date <= sysdate AND end_date >= sysdate";
     
     try {
       stmt = con.createStatement();
