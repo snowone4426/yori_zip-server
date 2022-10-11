@@ -18,13 +18,31 @@ public class RecipeObj {
 	private String state;
 	private String star_score;
 	private List<Map<String,String>> detail;
-	private Map<String,List<String>> category;
+	private Map<String,String> category;
 	private Map<String,Map<String,String>> ingredient;
+	private String reple_count;
+	private String num;
 
 	public RecipeObj () {}
 
   public String getRecipe_id() {
     return recipe_id;
+  }
+  
+  public String getNum() {
+    return num;
+  }
+
+  public void setNum(String num) {
+    this.num = num;
+  }
+
+  public String getReple_count() {
+    return reple_count;
+  }
+
+  public void setReple_count(String reple_count) {
+    this.reple_count = reple_count;
   }
 
   public void setRecipe_id(String recipe_id) {
@@ -127,11 +145,11 @@ public class RecipeObj {
     this.detail = detail;
   }
 
-  public Map<String, List<String>> getCategory() {
+  public Map<String, String> getCategory() {
     return category;
   }
 
-  public void setCategory(Map<String, List<String>> category) {
+  public void setCategory(Map<String, String> category) {
     this.category = category;
   }
 

@@ -232,7 +232,7 @@ public class RecipeDAO extends DBConnPool {
         result.setDetail(detailList);
         
         //---카테고리----------------------------------------------------------------
-        Map<String,List<String>> category = new HashMap<String,List<String>>();
+        Map<String,String> category = new HashMap<String,String>();
         List<String> main_category = new ArrayList<String>();
         String category_sql = "SELECT c.category_id, c.name FROM category c "
             + "INNER JOIN recipecategory rc ON rc.category_id = c.category_id "
@@ -244,15 +244,16 @@ public class RecipeDAO extends DBConnPool {
         }
         
         for (String name : main_category) {
-          List<String> sub_category = new ArrayList<String>();
+          String sub_category = "";
           String sub_category_sql = "SELECT rc.category_id, rc.recipe_id, rc.sub_category, c.name FROM recipecategory rc "
               + "INNER JOIN category c ON rc.category_id = c.category_id "
               + "WHERE rc.recipe_id = " + recipe_id + " AND c.name = '" + name + "' "
               + "ORDER BY category_id";
+          
           rs = stmt.executeQuery(sub_category_sql);
           
-          while (rs.next()) {
-            sub_category.add(rs.getString("sub_category"));
+          if (rs.next()) {
+            sub_category = rs.getString("sub_category");
           }
           
           category.put(name, sub_category);
@@ -350,8 +351,8 @@ public class RecipeDAO extends DBConnPool {
 	public Boolean createRecipe (RecipeObj recipe) {
 	  Boolean result = false;
 	  
-	  
 	  try {
+	    stmt = con.createStatement();
 	    Boolean recipe_result = false;
 	    String recipe_sql = "INSERT INTO recipe(recipe_id,user_id,title,thumbnail,difficulty,time,subtitle,discription,state) "
 	          + "VALUES (seq_recipe_id.nextval,?,?,?,?,?,?,?,?);";
@@ -376,11 +377,60 @@ public class RecipeDAO extends DBConnPool {
           psmt.setString(1,detail.get("recipe_id"));
           psmt.setString(2,detail.get("description"));
           psmt.setString(3,detail.get("photo"));
+          
+          if(psmt.executeUpdate() > 0) {
+            detail_result = true;
+          } else {
+            detail_result = false;
+            break;
+          }
+        }
+        
+        Boolean category_result = false;
+        for (String key : recipe.getCategory().keySet()) {
+          String main_category_sql = "SELECT category_id FROM category WHERE name = '"+ key +"'";
+          String category_id = "";
+          rs = stmt.executeQuery(main_category_sql);
+          
+          if (rs.next()) {
+            category_id = rs.getString("category_id");
+          } else {
+            break;
+          }
+          
+          String sub_category_sql = "INSERT INTO recipecategory VALUES (?,?,?)";
+          psmt = con.prepareStatement(sub_category_sql);
+          psmt.setString(0, category_id);
+          psmt.setString(1, recipe.getRecipe_id());
+          psmt.setString(2, recipe.getCategory().get(key));
+          
+          if (psmt.executeUpdate(sub_category_sql) > 0) {
+            category_result = true;
+          } else {
+            category_result = false;
+            break;
+          }
+        }
+        
+        Boolean ingredient_result = false;
+        for (String group_key : recipe.getIngredient().keySet()) {
+            String ingredient_sql = "INSERT INTO ingredient VALUES (?,?,?,?)";
+            psmt = con.prepareStatement(ingredient_sql);
+            psmt.setString(0,recipe.getRecipe_id());
+            psmt.setString(1, recipe.getIngredient().get(group_key).get("name"));
+            psmt.setString(2, group_key);
+            psmt.setString(3, recipe.getIngredient().get(group_key).get("quantity"));
+            
+            if (psmt.executeUpdate() > 0) {
+              ingredient_result = true;
+            } else {
+              ingredient_result = false;
+              break;
+            }
         }
         
         
-        
-        if (recipe_result && detail_result) {
+        if (recipe_result && detail_result && category_result && ingredient_result) {
           result = true;
         }
       } catch (Exception e) {
@@ -390,6 +440,79 @@ public class RecipeDAO extends DBConnPool {
       }
 	  
 	  return result;
+	}
+	
+	public Map<String,String> getCategory () {
+	  Map<String,String> category = new HashMap<String,String>();
+      List<String> main_category = new ArrayList<String>();
+      String category_sql = "SELECT c.category_id, c.name FROM category";
+      
+      try {
+        stmt = con.createStatement();
+        rs = stmt.executeQuery(category_sql);
+        
+        while (rs.next()) {
+          main_category.add(rs.getString("name"));
+        }
+        
+        for (String name : main_category) {
+          String sub_category_sql = "SELECT rc.category_id, rc.recipe_id, rc.sub_category, c.name FROM recipecategory rc "
+              + "INNER JOIN category c ON rc.category_id = c.category_id "
+              + "WHERE  c.name = '" + name + "'";
+          
+          rs = stmt.executeQuery(sub_category_sql);
+          
+          if (rs.next()) {
+            category.put(name, rs.getString("sub_category"));
+          }
+          
+        }
+        
+      } catch (Exception e) {
+        e.printStackTrace();
+      } finally {
+        close();
+      }
+      
+      return category;
+	}
+	
+	public List<RecipeObj> getMyRecipe (String user_id, Integer offset, Integer limit) {
+	  List<RecipeObj> my_recipe = new ArrayList<>();
+	  String sql = "SELECT ROWNUM as num, a.* FROM ("
+	      + "SELECT r.recipe_id, r.user_id, r.thumbnail, r.title, r.subtitle, r.created_at, r.updated_at, ROUND(AVG(s.score),1) AS star_score, COUNT(*) AS reple_count FROM recipe r "
+	      + "INNER JOIN star s ON s.recipe_id = r.recipe_id "
+	      + "INNER JOIN reple re ON re.recipe_id = r.recipe_id "
+	      + "GROUP BY r.user_id, r.thumbnail, r.title, r.subtitle, r.created_at, r.updated_at) a "
+	      + "WHERE user_id = "+ user_id +" AND ROWNUM BETWEEN " + offset*limit + " AND " + (offset+1)*limit;
+	  
+	  try {
+        stmt = con.createStatement();
+        rs = stmt.executeQuery(sql);
+        
+        while (rs.next()) {
+          RecipeObj recipe = new RecipeObj();
+          
+          recipe.setNum(rs.getString("num"));
+          recipe.setRecipe_id(rs.getString("recipe_id"));
+          recipe.setUser_id(rs.getString("user_id"));
+          recipe.setThumbnail(rs.getString("thumbnail"));
+          recipe.setTitle(rs.getString("title"));
+          recipe.setSubtitle(rs.getString("subtitle"));
+          recipe.setCreate_at(rs.getDate("creaeted_at"));
+          recipe.setUpdate_at(rs.getDate("upadated_at"));
+          recipe.setStar_score(rs.getString("star_score"));
+          recipe.setReple_count(rs.getString("reple_count"));
+          
+          my_recipe.add(recipe);
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      } finally {
+        close();
+      }
+	  
+	  return my_recipe;
 	}
 	
 }
