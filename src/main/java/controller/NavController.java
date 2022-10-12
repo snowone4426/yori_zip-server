@@ -43,10 +43,15 @@ public class NavController extends HttpServlet {
 	      case "getviewrecipe" :
 	        getViewRecipe(request,response);
 	        break;
+	      case "signout" : 
+	        signOut(request,response);
 	      default : 
 	        PrintWriter out = response.getWriter();
 	          out.print("MAIN CONTROLLER");
 	    }
+	  } else {
+	    PrintWriter out = response.getWriter();
+        out.print("MAIN CONTROLLER");
 	  }
 	}
 	
@@ -134,5 +139,17 @@ public class NavController extends HttpServlet {
       out.print(json_array.toString());
 	}
 	
+	private void signOut (HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	  HttpSession session = request.getSession();
+	  PrintWriter out = response.getWriter();
+	  
+	  session.removeAttribute("user_info");
+	  
+	  if(session.getAttribute("user_info") == null) {
+	    out.print(true);
+	  } else {
+	    out.print(false);
+	  }
+	}
 	
 }

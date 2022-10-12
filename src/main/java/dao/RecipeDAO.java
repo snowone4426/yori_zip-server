@@ -95,10 +95,11 @@ public class RecipeDAO extends DBConnPool {
 	}
 	
 	// 카테고리가 선택되어 있다면 그에 맞는 데이터에 limit만큼 offset페이지에 있는 정보를 보내줌.
-	public List<RecipeObj> getRecipeList (Integer offset, Integer limit, Map<String,List<String>> category) {
-	  List<RecipeObj> recipe_list = new ArrayList<RecipeObj>();
-	  String sql = "SELECT ROWNUM, recipe_id, title, subtitle, thumbnail "
-	      + "FROM (SELECT r.recipe_id, r.title, r.subtitle, r.thumbnail FROM recipe r ";
+	public List<Map<String,String>> getRecipeList (Integer offset, Integer limit, Map<String,String> category) {
+	  List<Map<String,String>> recipe_list = new ArrayList<Map<String,String>>();
+	  String sql = "SELECT ROWNUM, recipe_id, title, subtitle, thumbnail, difficulty, time, star_score "
+	      + "FROM (SELECT r.recipe_id, r.title, r.subtitle, r.thumbnail, r.difficulty, r.time, ROUND(AVG(s.score),1) AS star_score FROM recipe r "
+	      + "LEFT OUTER JOIN star s ON r.recipe_id = s.recipe_id ";
 	  
 	  if (category != null) {
 	    sql += "INNER JOIN recipecategory rc ON r.recipe_id = rc.recipe_id "
@@ -110,33 +111,38 @@ public class RecipeDAO extends DBConnPool {
 	    }
 	    
 	    for (String name : category.keySet()) {
-	      for ( String subcategory : category.get(name))  {
-	        sql += "rc.sub_category = '" + subcategory + "' OR ";
-	      }
+	        sql += "rc.sub_category = '" + category.get(name) + "' OR ";
 	    }
 	    
-	    sql = sql.substring(0,sql.length()-3);
+	    sql = sql.substring(0, sql.length() -3);
 	  }
 	      
-	  sql += "ORDER BY r.created_at DESC)";
+	  sql += "GROUP BY r.recipe_id, r.title, r.subtitle, r.thumbnail, r.difficulty, r.time, r.created_at"
+	      + " ORDER BY r.created_at DESC)";
 	  
 	  if (offset != null && limit != null) {
 	    sql += " WHERE ROWNUM BETWEEN " + offset*limit + " AND " + (offset + 1)*limit;
 	  }
+	  
+	  System.out.println(sql);
 	  
 	  try {
 	    stmt = con.createStatement();
         rs = stmt.executeQuery(sql);
         
         while (rs.next()) {
-          RecipeObj recipe = new RecipeObj();
+          Map<String,String> recipe = new HashMap<>();
           
-          recipe.setRecipe_id(rs.getString("recipe_id"));
-          recipe.setTitle(rs.getString("title"));
-          recipe.setSubtitle(rs.getString("subtitle"));
-          recipe.setThumbnail(rs.getString("thumbnail"));
+          recipe.put("recipe_id",rs.getString("recipe_id"));
+          recipe.put("title",rs.getString("title"));
+          recipe.put("subtitle",rs.getString("subtitle"));
+          recipe.put("thumbnail",rs.getString("thumbnail"));
+          recipe.put("difficulty",rs.getString("difficulty"));
+          recipe.put("time",rs.getString("time"));
+          recipe.put("star_score",rs.getString("star_score"));
           
           recipe_list.add(recipe);
+          
         }
         
         
@@ -150,8 +156,8 @@ public class RecipeDAO extends DBConnPool {
 	}
 	
 	// 검색어가 tag, title, subtitle과 일치하면 페이지 네이션 된 값을 반환
-	public List<RecipeObj> getSearchList(Integer offset, Integer limit, String search) {
-	  List<RecipeObj> recipe_list = new ArrayList<RecipeObj>();
+	public List<Map<String,Object>> getSearchList(Integer offset, Integer limit, String search) {
+	  List<Map<String,Object>> recipe_list = new ArrayList<Map<String,Object>>();
 	  String sql ="SELECT ROWNUM, recipe_id, title, subtitle, thumbnail, difficulty, time, created_at, state FROM ("
 	      + "SELECT r.recipe_id, r.title, r.subtitle, r.thumbnail, r.difficulty, r.time, r.created_at, r.state FROM recipe "
 	      + "INNER JOIN recipetag rt ON r.recipe_id = rt.recipe_id "
@@ -169,16 +175,16 @@ public class RecipeDAO extends DBConnPool {
         rs = stmt.executeQuery(sql);
         
         while (rs.next()) {
-          RecipeObj recipe = new RecipeObj();
+          Map<String,Object> recipe = new HashMap<String,Object>();
           
-          recipe.setRecipe_id(rs.getString("recipe_id"));
-          recipe.setTitle(rs.getString("title"));
-          recipe.setSubtitle(rs.getString("subtitle"));
-          recipe.setThumbnail(rs.getString("thumbnail"));
-          recipe.setLevel(rs.getString("level"));
-          recipe.setTime(rs.getString("time"));
-          recipe.setCreate_at(rs.getDate("create_at"));
-          recipe.setState(rs.getString("state"));
+          recipe.put("recipe_id",rs.getString("recipe_id"));
+          recipe.put("title",rs.getString("title"));
+          recipe.put("subtitle",rs.getString("subtitle"));
+          recipe.put("thumbnail",rs.getString("thumbnail"));
+          recipe.put("level",rs.getString("level"));
+          recipe.put("time",rs.getString("time"));
+          recipe.put("create_at",rs.getDate("create_at"));
+          recipe.put("state",rs.getString("state"));
           
           recipe_list.add(recipe);
         }
@@ -366,19 +372,18 @@ public class RecipeDAO extends DBConnPool {
 	  try {
 	    stmt = con.createStatement();
 	    Boolean recipe_result = false;
-	    String recipe_sql = "INSERT INTO recipe(recipe_id,user_id,title,thumbnail,difficulty,time,subtitle,discription,state) "
-	          + "VALUES (seq_recipe_id.nextval,?,?,?,?,?,?,?,?);";
+	    String recipe_sql = "INSERT INTO recipe(recipe_id,user_id,title,thumbnail,difficulty,time,subtitle,discription) "
+	          + "VALUES (seq_recipe_id.nextval,?,?,?,?,?,?,?);";
         psmt = con.prepareStatement(recipe_sql);
         
         psmt.setString(0, recipe.getUser_id());
-        psmt.setString(1,recipe.getTitle());
-        psmt.setString(2,recipe.getThumbnail());
-        psmt.setString(3,recipe.getLevel());
-        psmt.setString(4,recipe.getTime());
-        psmt.setString(5,recipe.getSubtitle());
-        psmt.setString(6,recipe.getDiscription());
-        psmt.setString(7,recipe.getState());
-        
+        psmt.setString(1, recipe.getTitle());
+        psmt.setString(2, recipe.getThumbnail());
+        psmt.setString(3, recipe.getLevel());
+        psmt.setString(4, recipe.getTime());
+        psmt.setString(5, recipe.getSubtitle());
+        psmt.setString(6, recipe.getDiscription());
+         
         recipe_result = psmt.executeUpdate() > 0;
         
         Boolean detail_result = false;
@@ -492,13 +497,13 @@ public class RecipeDAO extends DBConnPool {
       return category;
 	}
 	
-	public List<RecipeObj> getMyRecipe (String user_id, Integer offset, Integer limit) {
-	  List<RecipeObj> my_recipe = new ArrayList<>();
-	  String sql = "SELECT ROWNUM as num, a.* FROM ("
-	      + "SELECT r.recipe_id, r.user_id, r.thumbnail, r.title, r.subtitle, r.created_at, r.updated_at, ROUND(AVG(s.score),1) AS star_score, COUNT(*) AS reple_count FROM recipe r "
-	      + "INNER JOIN star s ON s.recipe_id = r.recipe_id "
-	      + "INNER JOIN reple re ON re.recipe_id = r.recipe_id "
-	      + "GROUP BY r.user_id, r.thumbnail, r.title, r.subtitle, r.created_at, r.updated_at) a "
+	public List<Map<String, Object>> getMyRecipe (String user_id, Integer offset, Integer limit) {
+	  List<Map<String, Object>> my_recipe = new ArrayList<>();
+	  String sql = "SELECT ROWNUM as num, recipe_id, user_id, thumbnail, title, subtitle, created_at, updated_at, star_score, reple_count FROM ("
+	      + "SELECT r.recipe_id, r.user_id, r.thumbnail, r.title, r.subtitle, r.created_at, r.updated_at, ROUND(AVG(s.score),1) AS star_score, COUNT(reple_id) AS reple_count FROM recipe r "
+	      + "LEFT OUTER JOIN star s ON s.recipe_id = r.recipe_id "
+	      + "LEFT OUTER JOIN reple re ON re.recipe_id = r.recipe_id "
+	      + "GROUP BY r.recipe_id, r.user_id, r.thumbnail, r.title, r.subtitle, r.created_at, r.updated_at) "
 	      + "WHERE user_id = "+ user_id +" AND ROWNUM BETWEEN " + offset*limit + " AND " + (offset+1)*limit;
 	  
 	  try {
@@ -506,18 +511,18 @@ public class RecipeDAO extends DBConnPool {
         rs = stmt.executeQuery(sql);
         
         while (rs.next()) {
-          RecipeObj recipe = new RecipeObj();
+          Map<String, Object> recipe = new HashMap<String, Object>();
           
-          recipe.setNum(rs.getString("num"));
-          recipe.setRecipe_id(rs.getString("recipe_id"));
-          recipe.setUser_id(rs.getString("user_id"));
-          recipe.setThumbnail(rs.getString("thumbnail"));
-          recipe.setTitle(rs.getString("title"));
-          recipe.setSubtitle(rs.getString("subtitle"));
-          recipe.setCreate_at(rs.getDate("creaeted_at"));
-          recipe.setUpdate_at(rs.getDate("upadated_at"));
-          recipe.setStar_score(rs.getString("star_score"));
-          recipe.setReple_count(rs.getString("reple_count"));
+          recipe.put("num", rs.getString("num"));
+          recipe.put("recipe_id", rs.getString("recipe_id"));
+          recipe.put("user_id", rs.getString("user_id"));
+          recipe.put("thumbnail", rs.getString("thumbnail"));
+          recipe.put("title", rs.getString("title"));
+          recipe.put("subtitle", rs.getString("subtitle"));
+          recipe.put("created_at", rs.getDate("created_at"));
+          recipe.put("updated_at", rs.getDate("updated_at"));
+          recipe.put("star_score", rs.getString("star_score"));
+          recipe.put("reple_count", rs.getString("reple_count"));
           
           my_recipe.add(recipe);
         }
