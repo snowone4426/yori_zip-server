@@ -8,7 +8,12 @@ import util.DBConnPool;
 public class StarDAO extends DBConnPool {
   public Map<String,String> getStar (String recipe_id, String user_id) {
     Map<String,String> star = null;
-    String sql = "SELECT * FROM star WHERE recipe_id = " + recipe_id + " AND user_id = " + user_id;
+    String sql = "SELECT * FROM star WHERE recipe_id = " + recipe_id + "";
+    
+    if (user_id != null) {
+      sql += " AND user_id = " + user_id;
+    }
+        
     
     try {
       stmt = con.createStatement();
