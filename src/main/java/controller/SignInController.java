@@ -2,6 +2,10 @@ package controller;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Map;
+
+import org.apache.tomcat.util.json.JSONParser;
+import org.apache.tomcat.util.json.ParseException;
 import org.json.JSONException;
 import org.json.JSONObject;
 import dao.UserDAO;
@@ -38,17 +42,19 @@ public class SignInController extends HttpServlet {
 	}
 	
 	public void signIn(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	    
 	  response.setContentType("application/json");
 	  response.setCharacterEncoding("utf-8");
 	  PrintWriter out = response.getWriter();
 	  HttpSession session = request.getSession();
+	  JSONParser json_parser = new JSONParser(request.getReader());
 	  JSONObject json_obj = new JSONObject();
 	  UserDAO user = new UserDAO();
 	  
 	  try {
-        JSONObject input_data = new JSONObject(request.getParameter("user_info"));
-        String email = input_data.getString("email");
-        String password = input_data.getString("password");
+	    Map<String, Object> json_data = json_parser.object();
+        String email = (String) json_data.get("email");
+        String password = (String) json_data.get("password");
       
         if(user.login(session, email, password)) {
           UserObj user_info = (UserObj) session.getAttribute("user_info");
@@ -58,13 +64,14 @@ public class SignInController extends HttpServlet {
           json_obj.put("success", false);
           json_obj.put("gender", "");
         }
-      
+        
       } catch (JSONException e) {
+        e.printStackTrace();
+      } catch (ParseException e) {
         e.printStackTrace();
       }
 	  
 	  out.print(json_obj);
     }
-	
 	
 }
