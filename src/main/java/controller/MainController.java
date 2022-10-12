@@ -74,7 +74,6 @@ public class MainController extends HttpServlet {
     }
     
     out.print(json_array.toString());
-    
   }
   
   private void getThemeRecipe(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

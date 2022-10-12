@@ -1,5 +1,8 @@
 package dao;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.servlet.http.HttpSession;
 
 import util.DBConnPool;
@@ -13,7 +16,7 @@ public class UserDAO extends DBConnPool {
 	// 로그인
 	public Boolean login (HttpSession session,String email, String password) {
 		Boolean result = false;
-		String sql = "SELECT * FROM user WHERE email='"+ email +"' AND password='" + password + "'";
+		String sql = "SELECT * FROM user_info WHERE email='"+ email +"' AND password='" + password + "'";
 		try {
 			stmt = con.createStatement();
 			rs = stmt.executeQuery(sql);
@@ -28,6 +31,7 @@ public class UserDAO extends DBConnPool {
 				user.setType(rs.getString("type"));
 				user.setUser_id(rs.getString("user_id"));
 				user.setState(rs.getString("state"));
+				user.setGender(rs.getString("gender"));
 				session.setAttribute("user_info", user);
 				
 				result = true;
@@ -36,8 +40,9 @@ public class UserDAO extends DBConnPool {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			close();
-		}
+	        close();
+	    }
+		
 		return result;
 	}
 	
@@ -78,7 +83,7 @@ public class UserDAO extends DBConnPool {
 	//중복 여부
 	public Boolean overlapCheck (String column, String value) {
 		Boolean result = false;
-		String sql = "SELECT * FROM user WHERE " + column + "='" + value;
+		String sql = "SELECT * FROM user_info WHERE " + column + "='" + value + "'";
 		
 		try {
 			stmt = con.createStatement();
@@ -98,18 +103,21 @@ public class UserDAO extends DBConnPool {
 	}
 	
 	// 회원가입
-	public Boolean SignUp (UserObj user) {
+	public Boolean signUp (UserObj user, String question, String answer) {
 		Boolean result = false;
-		String sql = "INSERT INTO user(user_id,password,email,nickname,profile,gender,type) VALUES ("
-				+ "SEQ_USER_NUM.NEXTVAL,?,?,?,?,?,?)";
+		String sql = "INSERT INTO user_info(user_id,password,email,nickname,profile,gender,type,question,answer) VALUES ("
+				+ "seq_user_id.NEXTVAL,?,?,?,?,?,?,?,?)";
+		
 		try {
 			psmt = con.prepareStatement(sql);
 			psmt.setString(1, user.getPassword());
 			psmt.setString(2, user.getEmail());
 			psmt.setString(3, user.getNickname());
 			psmt.setString(4, user.getProfile());
-			psmt.setString(5, user.getGender());     
-			psmt.setString(6,"C");
+			psmt.setString(5, user.getGender());
+			psmt.setString(6,user.getType());
+			psmt.setString(7, question);
+			psmt.setString(8, answer);
 			
 			int num = psmt.executeUpdate();
 			
@@ -118,33 +126,44 @@ public class UserDAO extends DBConnPool {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
-			close();
+		}finally {
+	      close();
 		}
 		
 		return result;
 	}
 	
 	//유저 정보
-	public UserObj userInfo (HttpSession session) {
-		return (UserObj) session.getAttribute("user_info");
+	public Map<String,Object> userInfo (HttpSession session) {
+	  Map<String,Object> result = new HashMap<String,Object>();
+	  UserObj user = (UserObj) session.getAttribute("user_info");
+	  
+	  result.put("profile", user.getProfile());
+	  result.put("email", user.getEmail());
+	  result.put("nickname", user.getNickname());
+	  
+	  
+	  return result;
 	}
 	
 	//유저 정보 수정
 	public Boolean userInfoUpdate (UserObj u) {
 		Boolean result = false;
 		String sql = "UPDATE user SET "
+		        + "profile = '" + u.getProfile() + "' "
 				+ "password = '" + u.getPassword() +"', "
 				+ "nickname = '" + u.getNickname() + "' "
 				+ "WHERE user_id='" + u.getUser_id() + "'";
+		
 		try {
 			stmt = con.createStatement();
 			int num = stmt.executeUpdate(sql);
+			psmt = con.prepareStatement(sql);
 			
 			if (num > 0) {
 				result = true;
 			}
-			
+			  
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
