@@ -45,7 +45,6 @@ public class SignInController extends HttpServlet {
 	}
 	
 	public void signIn(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-	    
 	  response.setContentType("application/json");
 	  response.setCharacterEncoding("utf-8");
 	  PrintWriter out = response.getWriter();

@@ -107,6 +107,7 @@ public class UserDAO extends DBConnPool {
 		Boolean result = false;
 		String sql = "INSERT INTO user_info(user_id,password,email,nickname,profile,gender,type,question,answer) VALUES ("
 				+ "seq_user_id.NEXTVAL,?,?,?,?,?,?,?,?)";
+		
 		try {
 			psmt = con.prepareStatement(sql);
 			psmt.setString(1, user.getPassword());

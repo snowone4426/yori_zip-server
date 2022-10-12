@@ -156,8 +156,8 @@ public class RecipeDAO extends DBConnPool {
 	}
 	
 	// 검색어가 tag, title, subtitle과 일치하면 페이지 네이션 된 값을 반환
-	public List<RecipeObj> getSearchList(Integer offset, Integer limit, String search) {
-	  List<RecipeObj> recipe_list = new ArrayList<RecipeObj>();
+	public List<Map<String,Object>> getSearchList(Integer offset, Integer limit, String search) {
+	  List<Map<String,Object>> recipe_list = new ArrayList<Map<String,Object>>();
 	  String sql ="SELECT ROWNUM, recipe_id, title, subtitle, thumbnail, difficulty, time, created_at, state FROM ("
 	      + "SELECT r.recipe_id, r.title, r.subtitle, r.thumbnail, r.difficulty, r.time, r.created_at, r.state FROM recipe "
 	      + "INNER JOIN recipetag rt ON r.recipe_id = rt.recipe_id "
@@ -175,16 +175,16 @@ public class RecipeDAO extends DBConnPool {
         rs = stmt.executeQuery(sql);
         
         while (rs.next()) {
-          RecipeObj recipe = new RecipeObj();
+          Map<String,Object> recipe = new HashMap<String,Object>();
           
-          recipe.setRecipe_id(rs.getString("recipe_id"));
-          recipe.setTitle(rs.getString("title"));
-          recipe.setSubtitle(rs.getString("subtitle"));
-          recipe.setThumbnail(rs.getString("thumbnail"));
-          recipe.setLevel(rs.getString("level"));
-          recipe.setTime(rs.getString("time"));
-          recipe.setCreate_at(rs.getDate("create_at"));
-          recipe.setState(rs.getString("state"));
+          recipe.put("recipe_id",rs.getString("recipe_id"));
+          recipe.put("title",rs.getString("title"));
+          recipe.put("subtitle",rs.getString("subtitle"));
+          recipe.put("thumbnail",rs.getString("thumbnail"));
+          recipe.put("level",rs.getString("level"));
+          recipe.put("time",rs.getString("time"));
+          recipe.put("create_at",rs.getDate("create_at"));
+          recipe.put("state",rs.getString("state"));
           
           recipe_list.add(recipe);
         }
@@ -372,19 +372,18 @@ public class RecipeDAO extends DBConnPool {
 	  try {
 	    stmt = con.createStatement();
 	    Boolean recipe_result = false;
-	    String recipe_sql = "INSERT INTO recipe(recipe_id,user_id,title,thumbnail,difficulty,time,subtitle,discription,state) "
-	          + "VALUES (seq_recipe_id.nextval,?,?,?,?,?,?,?,?);";
+	    String recipe_sql = "INSERT INTO recipe(recipe_id,user_id,title,thumbnail,difficulty,time,subtitle,discription) "
+	          + "VALUES (seq_recipe_id.nextval,?,?,?,?,?,?,?);";
         psmt = con.prepareStatement(recipe_sql);
         
         psmt.setString(0, recipe.getUser_id());
-        psmt.setString(1,recipe.getTitle());
-        psmt.setString(2,recipe.getThumbnail());
-        psmt.setString(3,recipe.getLevel());
-        psmt.setString(4,recipe.getTime());
-        psmt.setString(5,recipe.getSubtitle());
-        psmt.setString(6,recipe.getDiscription());
-        psmt.setString(7,recipe.getState());
-        
+        psmt.setString(1, recipe.getTitle());
+        psmt.setString(2, recipe.getThumbnail());
+        psmt.setString(3, recipe.getLevel());
+        psmt.setString(4, recipe.getTime());
+        psmt.setString(5, recipe.getSubtitle());
+        psmt.setString(6, recipe.getDiscription());
+         
         recipe_result = psmt.executeUpdate() > 0;
         
         Boolean detail_result = false;

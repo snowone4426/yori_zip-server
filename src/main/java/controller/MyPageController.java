@@ -43,7 +43,7 @@ public class MyPageController extends HttpServlet {
           case "myinfo" :
             getMyInfo(request,response);
           case "updatemyinfo" :
-            getMyInfo(request,response);
+            setMyInfo(request,response);
           default : 
             PrintWriter out = response.getWriter();
             out.print("MYPAGE CONTROLLER");
@@ -54,46 +54,7 @@ public class MyPageController extends HttpServlet {
       }
 	}
 	
-	@SuppressWarnings("unchecked")
-  public void getRecipeList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-	  response.setContentType("application/json"); 
-      response.setCharacterEncoding("utf-8");
-      request.setCharacterEncoding("utf-8");
-      PrintWriter out = response.getWriter();
-      RecipeDAO recipe = new RecipeDAO();
-      JSONParser json_parser = new JSONParser(request.getReader());
-      List<Map<String,String>> recipe_list = null;
-      Map<String,String> category = null;
-      
-      try {
-        Map<String, Object> json_data = json_parser.object();
-        String limit = (String) json_data.get("limit");
-        String offset = (String) json_data.get("offset");
-        
-        if (json_data.get("category") != null ) {
-          category = (Map<String, String>) json_data.get("category");
-        }
-        
-        recipe_list = recipe.getRecipeList(Integer.parseInt(offset), Integer.parseInt(limit), category);
-        System.out.println(recipe_list);
-        
-        JSONArray json_array = new JSONArray();
-        
-        for (Map<String,String> x :recipe_list) {
-          JSONObject json_obj = new JSONObject(x);
-          
-          json_array.put(json_obj);
-        }
-        
-        out.print(json_array.toString());
-
-      } catch (ParseException e) {
-        e.printStackTrace();
-      }
-      
-  }
-	
-	public void getMyRecipeList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	private void getMyRecipeList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
       response.setContentType("application/json"); 
       response.setCharacterEncoding("utf-8");
       request.setCharacterEncoding("utf-8");
@@ -126,7 +87,7 @@ public class MyPageController extends HttpServlet {
       
   }
 	
-	public void getMyReple(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	private void getMyReple(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 	  response.setContentType("application/json"); 
       response.setCharacterEncoding("utf-8");
       request.setCharacterEncoding("utf-8");
@@ -161,7 +122,7 @@ public class MyPageController extends HttpServlet {
       
 	}
 	
-	public void getMyInfo(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	private void getMyInfo(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 	  response.setContentType("application/json"); 
       response.setCharacterEncoding("utf-8");
       request.setCharacterEncoding("utf-8");
@@ -175,7 +136,7 @@ public class MyPageController extends HttpServlet {
       
 	}
 	
-	public void setMyInfo(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	private void setMyInfo(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 	  response.setContentType("application/json"); 
       response.setCharacterEncoding("utf-8");
       request.setCharacterEncoding("utf-8");
