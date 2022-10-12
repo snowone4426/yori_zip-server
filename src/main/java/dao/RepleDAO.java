@@ -1,15 +1,17 @@
 package dao;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import util.DBConnPool;
 
 public class RepleDAO extends DBConnPool {
-  public List<RepleObj> getReple(String recipe_id, Integer offset, Integer limit, String user_id) {
-    List<RepleObj> reple_list = new ArrayList<>();
+  public List<Map<String,Object>> getReple(String recipe_id, Integer offset, Integer limit, String user_id) {
+    List<Map<String,Object>> reple_list = new ArrayList<>();
     String sql = "SELECT ROWNUM AS num, re.* FROM reple re "
-        + "WHERE recipe_id = " + recipe_id + " AND num BETWEEN " + offset*limit + " AND " + (offset+1)*limit;
+        + "WHERE recipe_id = " + recipe_id + " AND ROWNUM BETWEEN " + offset*limit + " AND " + (offset+1)*limit;
     
     if (user_id != null) {
       sql += " AND user_id = " + user_id;
@@ -20,15 +22,15 @@ public class RepleDAO extends DBConnPool {
       rs = stmt.executeQuery(sql);
       
       while(rs.next()) {
-        RepleObj reple = new RepleObj();
+        Map<String,Object> reple = new HashMap<String,Object>();
         
-        reple.setReple_id(rs.getString("reple_id"));
-        reple.setRecipe_id(rs.getString("recipe_id"));
-        reple.setUser_id(rs.getString("user_id"));
-        reple.setContents(rs.getString("contents"));
-        reple.setCreate_at(rs.getDate("created_at"));
-        reple.setUpdate_at(rs.getDate("update_at"));
-        reple.setState(rs.getString("state"));
+        reple.put("reple_id",rs.getString("reple_id"));
+        reple.put("recipe_id",rs.getString("recipe_id"));
+        reple.put("user_id",rs.getString("user_id"));
+        reple.put("contents",rs.getString("contents"));
+        reple.put("created_at",rs.getDate("created_at"));
+        reple.put("update_at",rs.getDate("update_at"));
+        reple.put("state",rs.getString("state"));
         
         reple_list.add(reple);
       }

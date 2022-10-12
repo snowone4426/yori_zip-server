@@ -1,5 +1,8 @@
 package dao;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.servlet.http.HttpSession;
 
 import util.DBConnPool;
@@ -130,14 +133,23 @@ public class UserDAO extends DBConnPool {
 	}
 	
 	//유저 정보
-	public UserObj userInfo (HttpSession session) {
-		return (UserObj) session.getAttribute("user_info");
+	public Map<String,Object> userInfo (HttpSession session) {
+	  Map<String,Object> result = new HashMap<String,Object>();
+	  UserObj user = (UserObj) session.getAttribute("user_info");
+	  
+	  result.put("profile", user.getProfile());
+	  result.put("email", user.getEmail());
+	  result.put("nickname", user.getNickname());
+	  
+	  
+	  return result;
 	}
 	
 	//유저 정보 수정
 	public Boolean userInfoUpdate (UserObj u) {
 		Boolean result = false;
 		String sql = "UPDATE user SET "
+		        + "profile = '" + u.getProfile() + "' "
 				+ "password = '" + u.getPassword() +"', "
 				+ "nickname = '" + u.getNickname() + "' "
 				+ "WHERE user_id='" + u.getUser_id() + "'";
@@ -145,11 +157,12 @@ public class UserDAO extends DBConnPool {
 		try {
 			stmt = con.createStatement();
 			int num = stmt.executeUpdate(sql);
+			psmt = con.prepareStatement(sql);
 			
 			if (num > 0) {
 				result = true;
 			}
-			
+			  
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {

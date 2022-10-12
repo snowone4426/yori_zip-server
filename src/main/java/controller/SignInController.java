@@ -38,6 +38,9 @@ public class SignInController extends HttpServlet {
 		      PrintWriter out = response.getWriter();
 	          out.print("SIGNIN CONTROLLER");
 		  }
+		} else {
+		  PrintWriter out = response.getWriter();
+          out.print("SIGNIN CONTROLLER");
 		}
 	}
 	

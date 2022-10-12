@@ -47,6 +47,9 @@ public class NavController extends HttpServlet {
 	        PrintWriter out = response.getWriter();
 	          out.print("MAIN CONTROLLER");
 	    }
+	  } else {
+	    PrintWriter out = response.getWriter();
+        out.print("MAIN CONTROLLER");
 	  }
 	}
 	
