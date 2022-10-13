@@ -51,6 +51,8 @@ public class StarDAO extends DBConnPool {
         stmt.executeUpdate(star_set_sql);
       }
       
+      result = score;
+      
     } catch (Exception e) {
       e.printStackTrace();
     } finally {

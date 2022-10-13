@@ -1,6 +1,8 @@
 package dao;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpSession;
@@ -60,7 +62,7 @@ public class UserDAO extends DBConnPool {
 	
 	// 비밀번호 찾기
 	public String passwordFind (String email, String answer) {
-		String result = "";
+		String result = null;
 		String sql = "SELECT * FROM user WHERE email='"+ email +"' AND answer='" + answer + "'";
 		
 		try {
@@ -158,7 +160,6 @@ public class UserDAO extends DBConnPool {
 		try {
 			stmt = con.createStatement();
 			int num = stmt.executeUpdate(sql);
-			psmt = con.prepareStatement(sql);
 			
 			if (num > 0) {
 				result = true;
@@ -171,5 +172,27 @@ public class UserDAO extends DBConnPool {
 		}
 		
 		return result;
+	}
+	
+	//질문 배열
+	public List<String> question () {
+	  List<String> questionArr = new ArrayList<>();
+	  String sql = "SELECT * FROM question";
+	  
+	  try {
+        stmt = con.createStatement();
+        rs = stmt.executeQuery(sql);
+        
+        while (rs.next()) {
+          questionArr.add(rs.getString("question"));
+        }
+      
+	  } catch (Exception e) {
+	    e.printStackTrace();
+	  } finally {
+	    close();
+	  }
+	  
+	  return questionArr;
 	}
 }

@@ -342,6 +342,25 @@ public class RecipeDAO extends DBConnPool {
 	  
 	  return result;
 	}
+	// 찜 조회
+	public Boolean isBookmark (String recipe_id, String user_id) {
+	  Boolean result = false;
+      String sql = "SELECT * FROM bookmark WHERE recipe_id = " + recipe_id + " AND user_id = " + user_id;
+      
+      try {
+        stmt = con.createStatement();
+        rs = stmt.executeQuery(sql);
+        
+        if (rs.next()) result = true;
+        
+      } catch (Exception e) {
+        e.printStackTrace();
+      } finally {
+        close();
+      }
+      
+      return result;
+	}
 	
 	//레시피 삭제 기능
 	public Boolean deleteRecipe (String recipe_id, String user_id) {

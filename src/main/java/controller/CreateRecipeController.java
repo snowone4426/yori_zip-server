@@ -31,7 +31,7 @@ public class CreateRecipeController extends HttpServlet {
 	public void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 	  if(request.getParameter("cr") != null) {
         switch (request.getParameter("cr")) {
-          case "create" : 
+          case "create" :
             createRecipe(request,response);
           case "category" :
             getCategory(request,response);
