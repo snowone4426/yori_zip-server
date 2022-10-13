@@ -30,6 +30,12 @@ public class SignInController extends HttpServlet {
 
 
 	public void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	  response.setHeader("Access-Control-Allow-Methods","POST, GET, OPTIONS, DELETE");
+      response.setHeader("Access-Control-Max-Age", "3600");
+      response.setHeader("Access-Control-Allow-Headers", "Content-Type, x-requested-with");
+      response.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+	  response.setContentType("application/json");
+      response.setCharacterEncoding("utf-8");
 		if(request.getParameter("si") != null) {
 		  switch (request.getParameter("si")) {
 		    case "signin" :
@@ -53,8 +59,6 @@ public class SignInController extends HttpServlet {
 	}
 	
 	private void signIn(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-	  response.setContentType("application/json");
-	  response.setCharacterEncoding("utf-8");
 	  PrintWriter out = response.getWriter();
 	  HttpSession session = request.getSession();
 	  JSONParser json_parser = new JSONParser(request.getReader());
@@ -85,8 +89,6 @@ public class SignInController extends HttpServlet {
     }
 	
 	private void isLogin(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-	  response.setContentType("application/json");
-      response.setCharacterEncoding("utf-8");
       PrintWriter out = response.getWriter();
       HttpSession session = request.getSession();
       JSONObject json_obj = new JSONObject();
@@ -110,8 +112,6 @@ public class SignInController extends HttpServlet {
 	
 	private void passwordSearch(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 	  request.setCharacterEncoding("utf-8");
-	  response.setContentType("application/json");
-      response.setCharacterEncoding("utf-8");
       PrintWriter out = response.getWriter();
       JSONParser jsonparser = new JSONParser(request.getReader());
       JSONObject json_obj = new JSONObject();
@@ -140,8 +140,6 @@ public class SignInController extends HttpServlet {
 	
 	private void question(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 	  request.setCharacterEncoding("utf-8");
-      response.setContentType("application/json");
-      response.setCharacterEncoding("utf-8");
       PrintWriter out = response.getWriter();
       UserDAO userdao = new UserDAO();
       JSONArray json_arr = new JSONArray(userdao.question());

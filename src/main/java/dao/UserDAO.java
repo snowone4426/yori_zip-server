@@ -122,6 +122,7 @@ public class UserDAO extends DBConnPool {
 			psmt.setString(8, answer);
 			
 			int num = psmt.executeUpdate();
+			System.out.println(num);
 			
 			if (num > 0) {
 				result = true;

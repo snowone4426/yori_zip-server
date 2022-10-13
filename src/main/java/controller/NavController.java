@@ -32,6 +32,12 @@ public class NavController extends HttpServlet {
 
 	
 	public void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	  response.setHeader("Access-Control-Allow-Methods","POST, GET, OPTIONS, DELETE");
+      response.setHeader("Access-Control-Max-Age", "3600");
+      response.setHeader("Access-Control-Allow-Headers", "Content-Type, x-requested-with");
+      response.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+	  response.setContentType("application/json");
+      response.setCharacterEncoding("utf-8");
 	  if(request.getParameter("n") != null) {
 	    switch (request.getParameter("n")) {
 	      case "category" : 
@@ -45,6 +51,7 @@ public class NavController extends HttpServlet {
 	        break;
 	      case "signout" : 
 	        signOut(request,response);
+	        break;
 	      default : 
 	        PrintWriter out = response.getWriter();
 	          out.print("MAIN CONTROLLER");
@@ -56,8 +63,6 @@ public class NavController extends HttpServlet {
 	}
 	
 	private void getCategory(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-	  response.setContentType("application/json");
-	  response.setCharacterEncoding("utf-8");
 	  PrintWriter out = response.getWriter();
 	  RecipeDAO recipe = new RecipeDAO();
 	  Map<String,List<String>> map = recipe.getCategory();
@@ -74,14 +79,11 @@ public class NavController extends HttpServlet {
           e.printStackTrace();
         }
 	  }
-	  
 	  out.print(json_obj.toString());
 	}
 	
 	@SuppressWarnings("unchecked")
   private void setViewRecipe (HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-	  response.setContentType("application/json");
-      response.setCharacterEncoding("utf-8");
       PrintWriter out = response.getWriter();
       HttpSession session = request.getSession();
       List<RecipeObj> recent_view = null;
@@ -106,14 +108,11 @@ public class NavController extends HttpServlet {
       }
       
       session.setAttribute("recent_view", recent_view);
-      
       out.print(true);
 	}
 	
 	@SuppressWarnings("unchecked")
   private void getViewRecipe (HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-      response.setContentType("application/json");
-      response.setCharacterEncoding("utf-8");
       PrintWriter out = response.getWriter();
       HttpSession session = request.getSession();
       List<RecipeObj> recent_view = null;
@@ -135,7 +134,7 @@ public class NavController extends HttpServlet {
           json_array.put(json_obj);
         }
       }
-      
+      System.out.println("최근 본 레시피 들고오기 성공");
       out.print(json_array.toString());
 	}
 	
@@ -146,6 +145,7 @@ public class NavController extends HttpServlet {
 	  session.removeAttribute("user_info");
 	  
 	  if(session.getAttribute("user_info") == null) {
+	    System.out.println("로그아웃 성공");
 	    out.print(true);
 	  } else {
 	    out.print(false);

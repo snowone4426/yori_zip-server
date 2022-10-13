@@ -25,6 +25,12 @@ public class SignUpController extends HttpServlet {
   }
   
   public void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    response.setHeader("Access-Control-Allow-Methods","POST, GET, OPTIONS, DELETE");
+    response.setHeader("Access-Control-Max-Age", "3600");
+    response.setHeader("Access-Control-Allow-Headers", "Content-Type, x-requested-with");
+    response.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+    response.setContentType("application/json");
+    response.setCharacterEncoding("utf-8");
     if(request.getParameter("su") != null) {
       switch (request.getParameter("su")) {
         case "signup" : 
@@ -44,8 +50,6 @@ public class SignUpController extends HttpServlet {
   }
   
   public void signUp(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-    response.setContentType("application/json");
-    response.setCharacterEncoding("utf-8");
     request.setCharacterEncoding("utf-8");
     PrintWriter out = response.getWriter();
     JSONParser json_parser = new JSONParser(request.getReader());
@@ -71,8 +75,6 @@ public class SignUpController extends HttpServlet {
   }
   
   public void overlapCheck(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-    response.setContentType("application/json");
-    response.setCharacterEncoding("utf-8");
     request.setCharacterEncoding("utf-8");
     PrintWriter out = response.getWriter();
     JSONParser json_parser = new JSONParser(request.getReader());
