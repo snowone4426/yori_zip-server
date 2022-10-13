@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.tomcat.util.json.JSONParser;
 import org.apache.tomcat.util.json.ParseException;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import dao.UserDAO;
@@ -34,6 +35,13 @@ public class SignInController extends HttpServlet {
 		    case "signin" :
 		      signIn(request,response);
 		      break;
+		    case "islogin" :
+		      isLogin(request,response);
+		      break;
+		    case "passwordsearch" : 
+		      passwordSearch(request,response);
+		    case "question" : 
+		      question(request,response);
 		    default : 
 		      PrintWriter out = response.getWriter();
 	          out.print("SIGNIN CONTROLLER");
@@ -44,7 +52,7 @@ public class SignInController extends HttpServlet {
 		}
 	}
 	
-	public void signIn(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	private void signIn(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 	  response.setContentType("application/json");
 	  response.setCharacterEncoding("utf-8");
 	  PrintWriter out = response.getWriter();
@@ -75,5 +83,70 @@ public class SignInController extends HttpServlet {
 	  
 	  out.print(json_obj);
     }
+	
+	private void isLogin(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	  response.setContentType("application/json");
+      response.setCharacterEncoding("utf-8");
+      PrintWriter out = response.getWriter();
+      HttpSession session = request.getSession();
+      JSONObject json_obj = new JSONObject();
+      UserDAO user = new UserDAO();
+      String gender = null;
+      try {
+        if ((gender = user.isLogin(session)) != null) {
+          json_obj.put("gender", gender);
+          json_obj.put("success", true);
+        } else {
+          json_obj.put("success", false);
+        }
+        
+        out.print(json_obj.toString());
+        
+      } catch (JSONException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+	}
+	
+	private void passwordSearch(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	  request.setCharacterEncoding("utf-8");
+	  response.setContentType("application/json");
+      response.setCharacterEncoding("utf-8");
+      PrintWriter out = response.getWriter();
+      JSONParser jsonparser = new JSONParser(request.getReader());
+      JSONObject json_obj = new JSONObject();
+      UserDAO userdao = new UserDAO();
+      
+      try {
+        Map<String,Object> json_data = jsonparser.object();
+        String email = (String) json_data.get("email");
+        String answer = (String) json_data.get("answer");
+        
+        String password = userdao.passwordFind(email, answer);
+        
+        if (password != null) {
+          json_obj.put("password", password);
+          json_obj.put("success", true);
+        } else {
+          json_obj.put("success", false);
+        }
+        
+        out.print(json_obj);
+        
+      } catch (ParseException | JSONException e) {
+        e.printStackTrace();
+      }
+	}
+	
+	private void question(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	  request.setCharacterEncoding("utf-8");
+      response.setContentType("application/json");
+      response.setCharacterEncoding("utf-8");
+      PrintWriter out = response.getWriter();
+      UserDAO userdao = new UserDAO();
+      JSONArray json_arr = new JSONArray(userdao.question());
+      
+      out.print(json_arr.toString());
+	}
 	
 }
